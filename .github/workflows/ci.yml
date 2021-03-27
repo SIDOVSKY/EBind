@@ -1,0 +1,306 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+
+env:
+  CONFIG: 'Release'
+  TEST_PLATFORM: 'net5.0'
+  XHARNESS_VERSION: '1.0.0-prerelease.21175.2'
+
+defaults:
+  run:
+    # Allow ~/.bash_profile
+    shell: bash --login --norc -eo pipefail {0}
+
+jobs:
+  main:
+    name: Build, Test
+    runs-on: windows-latest
+    outputs:
+      archive-unit-test-results: ${{ steps.archive-unit-test-results.outcome }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Prepare MSBuild
+        # Alias MSBuild.exe as `msbuild` command because it's not available in windows bash by default.
+        run: |
+          echo >> ~/.bash_profile
+          echo 'msbuild() { command MSBuild.exe $@; }' >> ~/.bash_profile
+
+      # NOT MANY NUGETS -> NO TIME DIFFERENCE YET
+      # - name: Nuget Cache
+      #   id: cache-nugets
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.nuget/packages
+      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nuget-
+
+      # Cannot use `dotnet` or `dotnet msbuild` to build MSBuild.Sdk.Extras projects and build or restore Xamarin projects. Their targets are unknown.
+      - name: Solution Restore
+        run: |
+          msbuild ./EBind/EBind.csproj -t:Restore -p:Configuration=$CONFIG -maxcpucount
+          msbuild ./EBind.Tests/EBind.Tests.csproj -t:Restore -p:Configuration=$CONFIG -maxcpucount
+          msbuild ./EBind.LinkerIncludeGenerator/EBind.LinkerIncludeGenerator.csproj -t:Restore -p:Configuration=$CONFIG -maxcpucount
+          msbuild ./EBind.LinkerIncludeGenerator.Tests/EBind.LinkerIncludeGenerator.Tests.csproj -t:Restore -p:Configuration=$CONFIG -maxcpucount
+          msbuild ./EBind.Tests.Android/EBind.Tests.Android.csproj -t:Restore -p:Configuration=$CONFIG -maxcpucount
+
+      - name: Build
+        run: |
+          msbuild ./EBind/EBind.csproj \
+            -t:Build \
+            -p:Configuration=$CONFIG \
+            -p:RestorePackages=false \
+            -maxcpucount
+
+      - name: Test
+        id: unit-test
+        run: |
+          dotnet test ./EBind.Tests/EBind.Tests.csproj \
+            -c $CONFIG \
+            -f $TEST_PLATFORM \
+            --no-restore \
+            --logger "trx;LogFileName=UnitTestResults.trx" \
+            -p:DisableIncrementalClean=true
+
+          dotnet test ./EBind.LinkerIncludeGenerator.Tests/EBind.LinkerIncludeGenerator.Tests.csproj \
+            -c $CONFIG \
+            -f $TEST_PLATFORM \
+            --no-restore \
+            --logger "trx;LogFileName=UnitTestResults.trx" \
+            -p:DisableIncrementalClean=true
+
+      - name: Archive Unit Test Results
+        id: archive-unit-test-results
+        if: ${{ steps.unit-test.outcome == 'success' || steps.unit-test.outcome == 'failure' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit-test-results
+          path: |
+            ./EBind.Tests/TestResults/
+            ./EBind.LinkerIncludeGenerator.Tests/TestResults/
+          retention-days: 7
+
+      - name: Install Coverage Collector
+        run: |
+          dotnet tool install --global coverlet.console
+
+      - name: Collect Coverage
+        run: |
+          coverlet "./EBind.Tests/bin/$CONFIG/$TEST_PLATFORM/EBind.Tests.dll" \
+            --target "dotnet" \
+            --targetargs "test ./EBind.Tests/ --no-build -c $CONFIG -f $TEST_PLATFORM" \
+            --format opencover \
+            --output "./EBind.Tests/TestResults/" \
+            --verbosity detailed
+
+      - name: Publish Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          directory: ./EBind.Tests/TestResults/
+
+      - name: Build Android Tests
+        run: |
+          msbuild ./EBind.Tests.Android/EBind.Tests.Android.csproj \
+            -t:Build \
+            -p:Configuration=$CONFIG \
+            -p:RestorePackages=false \
+            -p:AndroidBuildApplicationPackage=true \
+            -p:DisableIncrementalClean=true \
+            -maxcpucount
+
+      - name: Archive Android Test APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-test-apk
+          path: ./EBind.Tests.Android/bin/Release/EBind.Tests.Android-Signed.apk
+          retention-days: 7
+
+  android-tests:
+    name: Android Tests
+    runs-on: macOS-10.15
+    needs: main
+    outputs:
+      archive-test-results: ${{ steps.archive-test-results.outcome }}
+    steps: 
+      - name: Load APK
+        uses: actions/download-artifact@v2
+        with:
+          name: android-test-apk
+
+      - name: Prepare Tools
+        run: |
+          dotnet tool install Microsoft.DotNet.XHarness.CLI \
+            --global \
+            --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
+            --version $XHARNESS_VERSION
+
+      - name: Run Tests
+        id: test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          script: xharness android test --app="./EBind.Tests.Android-Signed.apk" --package-name="EBind.Tests.Android" --instrumentation="ebind.tests.droid.xharness_instrumentation" --device-arch="x86" --output-directory="./xharness_android" --verbosity
+
+      - name: Archive Android Test Results
+        id: archive-test-results
+        if: ${{ steps.test.outcome == 'success' || steps.test.outcome == 'failure' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: android-test-results
+          path: ./xharness_android
+          retention-days: 7
+
+  ios-tests:
+    name: iOS Tests
+    runs-on: macOS-10.15
+    needs: main
+    outputs:
+      archive-test-results: ${{ steps.archive-test-results.outcome }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Prepare MSBuild
+        # Cannot use `dotnet` or `dotnet msbuild` to build MSBuild.Sdk.Extras projects and build or restore Xamarin projects. Their targets are unknown.
+        # macOS-10.15 agent includes Mono 6.12 (and MSBuild 16.6) which has no .NET 5 and C# 9 support.
+        # Here we override default Mono msbuild with v16.8 from VS for Mac 8.8.6.15.
+        run: |
+          echo >> ~/.bash_profile
+          echo 'msbuild() { command mono "/Applications/Visual Studio.app/Contents/Resources/lib/monodevelop/bin/MSBuild/Current/bin/msbuild.dll" $@; }' >> ~/.bash_profile
+
+      - name: Restore
+        run: |
+          msbuild ./EBind.Tests.iOS/EBind.Tests.iOS.csproj \
+            -t:Restore \
+            -p:Configuration=$CONFIG \
+            -p:Platform=iPhoneSimulator \
+            -maxcpucount
+
+      - name: Build
+        run: |
+          msbuild ./EBind.Tests.iOS/EBind.Tests.iOS.csproj \
+            -t:Build \
+            -p:Configuration=$CONFIG \
+            -p:RestorePackages=false \
+            -p:Platform=iPhoneSimulator \
+            -p:DisableIncrementalClean=true \
+            -maxcpucount
+
+      - name: Prepare Tools
+        run: |
+          dotnet tool install Microsoft.DotNet.XHarness.CLI \
+            --global \
+            --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json \
+            --version $XHARNESS_VERSION
+
+      - name: Run Tests
+        id: test
+        run: |
+          xharness apple test \
+            --app="./EBind.Tests.iOS/bin/iPhoneSimulator/Release/EBind.Tests.iOS.app" \
+            --output-directory="./EBind.Tests.iOS/TestResults/xharness_apple" \
+            --targets=ios-simulator-64 \
+            --verbosity \
+            -- -app-arg:xharness
+
+      - name: Archive Test Results
+        id: archive-test-results
+        if: ${{ steps.test.outcome == 'success' || steps.test.outcome == 'failure' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ios-test-results
+          path: ./EBind.Tests.iOS/TestResults/xharness_apple
+          retention-days: 7
+  
+  publish_unit_test_results:
+    name: Publish Unit Test Results
+    runs-on: ubuntu-latest
+    needs: main
+    if: ${{ !cancelled() && needs.main.outputs.archive-unit-test-results == 'success' }}
+    steps:
+      - name: Load Results
+        uses: actions/download-artifact@v2
+        with:
+          name: unit-test-results
+
+      - name: Prepare Unit Test Results
+        run: |
+          dotnet tool install --global trx2junit
+          trx2junit */**/*.trx
+
+      - name: Publish Unit Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.9
+        with:
+          github_token: ${{ github.token }}
+          files: "*/**/*.xml"
+          check_name: Unit Test Results
+          comment_on_pr: false
+
+  publish_android_test_results:
+    name: Publish Android Test Results
+    runs-on: ubuntu-latest
+    needs: android-tests
+    if: ${{ !cancelled() && needs.android-tests.outputs.archive-test-results == 'success' }}
+    steps:
+      - name: Load Results
+        uses: actions/download-artifact@v2
+        with:
+          name: android-test-results
+
+      - name: Prepare Device Test Tools
+        run: |
+          dotnet tool install --global dotnet-xunit-to-junit
+
+      - name: Prepare Android Test Results
+        run: |
+          dotnet-xunit-to-junit "TestResults.xml" "TestResultsJUnit.xml"
+
+      - name: Publish Android Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.9
+        with:
+          github_token: ${{ github.token }}
+          files: TestResultsJUnit.xml
+          check_name: Android Test Results
+          comment_on_pr: false
+
+  publish_ios_test_results:
+    name: Publish iOS Test Results
+    runs-on: ubuntu-latest
+    needs: ios-tests
+    if: ${{ !cancelled() && needs.ios-tests.outputs.archive-test-results == 'success' }}
+    steps:
+      - name: Load Results
+        uses: actions/download-artifact@v2
+        with:
+          name: ios-test-results
+
+      - name: Prepare Device Test Tools
+        run: |
+          dotnet tool install --global dotnet-xunit-to-junit
+
+      - name: Prepare iOS Test Results
+        run: |
+          results_path=$(find . -name "*.xml" -print -quit)
+          dotnet-xunit-to-junit "$results_path" "TestResultsJUnit.xml"
+
+      - name: Publish iOS Test Results
+        uses: docker://ghcr.io/enricomi/publish-unit-test-result-action:v1.9
+        with:
+          github_token: ${{ github.token }}
+          files: TestResultsJUnit.xml
+          check_name: iOS Test Results
+          comment_on_pr: false

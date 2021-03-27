@@ -1,0 +1,9 @@
+﻿<Project>
+  <!--
+  IncrementalClean target deletes files generated from .cs.pp in `\obj\<config>\<platform>\NuGet\**\*.cs`.
+  These files are restored only at the next build.
+  Solution taken from https://github.com/dotnet/msbuild/issues/1054#issuecomment-313218030
+  -->
+  <Import Project="DisableIncrementalClean.targets"
+          Condition=" '$(DisableIncrementalClean)' == 'true' OR '$(DisableIncrementalClean)' == 'True' " />
+</Project>

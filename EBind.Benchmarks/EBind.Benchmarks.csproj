@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="MugenMvvmToolkit.Binding" Version="6.5.0" />
+    <PackageReference Include="MvvmCross" Version="7.1.2" />
+    <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" GeneratePathProperty="true" />
+    <PackageReference Include="ReactiveUI" Version="13.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EBind.Test.Models\EBind.Test.Models.csproj" />
+    <ProjectReference Include="..\EBind\EBind.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="GalaSoft.MvvmLight.Platform">
+      <HintPath>$(PkgMvvmLightLibsStd10)\lib\monoandroid1\GalaSoft.MvvmLight.Platform.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

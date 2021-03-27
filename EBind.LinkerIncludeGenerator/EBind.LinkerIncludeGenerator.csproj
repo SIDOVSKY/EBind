@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsTool>true</IsTool>
+    <Authors>SIDOVSKY</Authors>
+    <Copyright>Vadim Sedov</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Description>A Source Generator that hints the mono linker about code usage. It helps to avoid EBind-related linker issues.</Description>
+    <PackageTags>mvvm, data, binding, xamarin, maui, wpf, uwp, winforms, mono, linker</PackageTags>
+    <Version>1.0.2</Version>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/SIDOVSKY/EBind</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/SIDOVSKY/EBind.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+    Microsoft.CodeAnalysis version should be the same as in Uno.SourceGenerationTasks.
+    (https://github.com/unoplatform/Uno.SourceGeneration/blob/master/src/Uno.SourceGeneration.Host/Uno.SourceGeneration.Host.csproj#:~:text=Microsoft.CodeAnalysis)
+    In version 3.8.0+ INamedTypeSymbol.TupleElements throws System.MissingMethodException.
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.6.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.6.0" PrivateAssets="All" />
+    <PackageReference Include="Uno.SourceGeneration" Version="3.0.0" PrivateAssets="All" />
+    <PackageReference Include="Uno.SourceGenerationTasks" Version="3.0.0" PrivateAssets="None" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="build/**/*.*" Pack="true" PackagePath="build" />
+    <None Include="..\Assets\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
