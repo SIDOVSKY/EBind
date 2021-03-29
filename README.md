@@ -58,15 +58,19 @@ binding.Dispose();
 
 ### Three types of bindings here
 
-* <a id='equality'>**EQUALITY**</a>
+* <a id='equality'>**EQUALITY**</a> – bind a property or an expression of them to another property.  
+  Every change of every property on the right (`vm.Text`) leads to an assignment of the property on the left (`view.Text`).  
+  Binding between two properties may work in a Two-Way mode.
   ```cs
   () => view.Text == vm.Text,
   ```
-* <a id='action'>**ACTION**</a>
+* <a id='action'>**ACTION**</a> – bind a method to its target and parameters.  
+  Every time `vm.ImageUri` is changed `view.ShowImage` is invoked with a new value.
   ```cs
   () => view.ShowImage(vm.ImageUri),
   ```
-* <a id='event'>**EVENT**</a>
+* <a id='event'>**EVENT**</a> – bind a method or command to an event.  
+  Every time `view.Click` is raised `vm.OnViewClicked` is called.
   ```cs
   (view, nameof(View.Click), vm.OnViewClicked),
   ```
