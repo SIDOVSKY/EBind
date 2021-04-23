@@ -3,7 +3,7 @@
   <img src="Assets/logo.svg" alt="EBind" height="150"><br>
   <br>
   <a href="https://github.com/SIDOVSKY/EBind/actions/workflows/ci.yml">
-    <img src="https://github.com/SIDOVSKY/EBind/actions/workflows/ci.yml/badge.svg?branch=main"alt="CI">
+    <img src="https://github.com/SIDOVSKY/EBind/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI">
   </a>
   <a href="https://www.nuget.org/packages/EBind.NET/">
     <img src="https://img.shields.io/nuget/v/EBind.NET?logo=nuget" alt="nuget: EBind">
