@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System;
+using BenchmarkDotNet.Attributes;
 using EBind.Test.Models;
 using GalaSoft.MvvmLight.Helpers;
 using MugenMvvmToolkit;
@@ -127,6 +128,34 @@ namespace EBind.Benchmarks
 
         [Benchmark]
         public void PraeclarumBind() => ChangeSourceValue();
+
+        [GlobalSetup(Target = nameof(XamarinFormsCompiled))]
+        public void XamarinFormsCompiledSetup()
+        {
+            XamarinForms.XamarinFormsInitializer.Init();
+
+            var target = new XamarinForms.SimplestBindableObject();
+            _source = new NotifyPropertyChangedEventObject();
+
+            var binding = new Xamarin.Forms.Internals.TypedBinding<NotifyPropertyChangedEventObject, int>(
+                getter: s => (s.IntValue, true),
+                setter: (s, v) => s.IntValue = v,
+                handlers: new[]
+                {
+                    Tuple.Create<Func<NotifyPropertyChangedEventObject, object>, string>(s => s, nameof(NotifyPropertyChangedEventObject.IntValue))
+                })
+            {
+                Mode = Xamarin.Forms.BindingMode.OneWay,
+            };
+
+            target.BindingContext = _source;
+            target.SetBinding(XamarinForms.SimplestBindableObject.ValueProperty, binding);
+
+            _bindingRef = target;
+        }
+
+        [Benchmark]
+        public void XamarinFormsCompiled() => ChangeSourceValue();
 
         private void ChangeSourceValue()
         {

@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System;
+using BenchmarkDotNet.Attributes;
 using EBind.Test.Models;
 using GalaSoft.MvvmLight.Helpers;
 using MugenMvvmToolkit;
@@ -10,7 +11,8 @@ namespace EBind.Benchmarks
 {
     public class Comparison_Creation_TwoWay : IViewFor<NotifyPropertyChangedEventObject>
     {
-        private readonly MvxBindingContextOwner _mvxContextOwner = new MvxBindingContextOwner();
+        private readonly MvxBindingContextOwner _mvxContextOwner = new();
+        private readonly XamarinForms.SimplestBindableObject _xamarinFormsTarget = new();
 
         private NotifyPropertyChangedEventObject? _target;
         private NotifyPropertyChangedEventObject? _source;
@@ -115,6 +117,27 @@ namespace EBind.Benchmarks
             var b = Praeclarum.Bind.Binding.Create(() => _target.IntValue == _source!.IntValue);
 
             b.Unbind();
+        }
+
+        [Benchmark]
+        public void XamarinFormsCompiled()
+        {
+            var binding = new Xamarin.Forms.Internals.TypedBinding<NotifyPropertyChangedEventObject, int>(
+                getter: s => (s.IntValue, true),
+                setter: (s, v) => s.IntValue = v,
+                handlers: new[]
+                {
+                    Tuple.Create<Func<NotifyPropertyChangedEventObject, object>, string>(s => s, nameof(NotifyPropertyChangedEventObject.IntValue))
+                })
+            {
+                Mode = Xamarin.Forms.BindingMode.TwoWay,
+            };
+
+            _xamarinFormsTarget.BindingContext = _source;
+            _xamarinFormsTarget.SetBinding(XamarinForms.SimplestBindableObject.ValueProperty, binding);
+
+            _xamarinFormsTarget.BindingContext = null;
+            _xamarinFormsTarget.RemoveBinding(XamarinForms.SimplestBindableObject.ValueProperty);
         }
 
         [GlobalCleanup]

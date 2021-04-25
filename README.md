@@ -311,23 +311,40 @@ It's recommended to decorate exceptions during binding creation with additional 
 ``` ini
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19041.572 (2004/?/20H1)
 AMD Ryzen 5 1600, 1 CPU, 12 logical and 6 physical cores
-.NET Core SDK=5.0.102
-  [Host]     : .NET Core 5.0.2 (CoreCLR 5.0.220.61120, CoreFX 5.0.220.61120), X64 RyuJIT
-  DefaultJob : .NET Core 5.0.2 (CoreCLR 5.0.220.61120, CoreFX 5.0.220.61120), X64 RyuJIT
+.NET Core SDK=5.0.202
+  [Host]     : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
+  DefaultJob : .NET Core 5.0.5 (CoreCLR 5.0.521.16609, CoreFX 5.0.521.16609), X64 RyuJIT
 ```
+</details>
+
+<details open>
+<summary>Comparison: Trigger <sup><a id='benchmark-comparison-trigger' href='#benchmark-comparison-trigger' title='Anchor'>🔗</a></sup></summary>
+
+|               Method |          Mean |      Error |     StdDev |    Ratio |  Gen 0 | Allocated |
+|--------------------- |--------------:|-----------:|-----------:|---------:|-------:|----------:|
+|                EBind |      68.71 ns |   0.422 ns |   0.395 ns |     1.00 | 0.0305 |     128 B |
+|                Mugen |     206.29 ns |   2.305 ns |   2.156 ns |     3.00 | 0.0172 |      72 B |
+| XamarinFormsCompiled |     351.32 ns |   1.516 ns |   1.418 ns |     5.11 | 0.0267 |     112 B |
+|            MvvmLight |   1,070.28 ns |   3.529 ns |   3.128 ns |    15.58 | 0.1259 |     528 B |
+|            MvvmCross |   1,368.35 ns |   8.320 ns |   7.376 ns |    19.92 | 0.1678 |     704 B |
+|           ReactiveUI |   3,054.42 ns |  30.750 ns |  28.763 ns |    44.45 | 0.1831 |     777 B |
+|       PraeclarumBind | 150,506.37 ns | 372.197 ns | 329.943 ns | 2,190.78 | 0.9766 |    4415 B |
+
+<sup>[sources](EBind.Benchmarks/Comparison_Trigger.cs)</sup>
 </details>
 
 <details open>
 <summary>Comparison: Creation, One-Way <sup><a id='benchmark-comparison-creation-one-way' href='#benchmark-comparison-creation-one-way' title='Anchor'>🔗</a></sup></summary>
 
-|         Method |       Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
-|--------------- |-----------:|----------:|----------:|------:|--------:|-------:|----------:|
-|          EBind |   3.953 us | 0.0252 us | 0.0223 us |  1.00 |    0.00 | 0.5264 |   2.18 KB |
-|      MvvmLight |   6.960 us | 0.0644 us | 0.0602 us |  1.76 |    0.02 | 0.5951 |   2.45 KB |
-|          Mugen |   7.659 us | 0.0973 us | 0.0910 us |  1.94 |    0.03 | 0.4501 |   1.97 KB |
-|      MvvmCross |   9.236 us | 0.1007 us | 0.0942 us |  2.34 |    0.02 | 0.9155 |   3.78 KB |
-|     ReactiveUI |  47.973 us | 0.9584 us | 1.0652 us | 12.09 |    0.29 | 3.4790 |  14.28 KB |
-| PraeclarumBind | 330.993 us | 1.8638 us | 1.7434 us | 83.70 |    0.67 | 2.4414 |  10.37 KB |
+|               Method |       Mean |     Error |    StdDev | Ratio |  Gen 0 | Allocated |
+|--------------------- |-----------:|----------:|----------:|------:|-------:|----------:|
+| XamarinFormsCompiled |   2.955 us | 0.0117 us | 0.0110 us |  0.74 | 0.1831 |     768 B |
+|                EBind |   3.994 us | 0.0240 us | 0.0213 us |  1.00 | 0.5264 |    2232 B |
+|            MvvmLight |   7.118 us | 0.0506 us | 0.0474 us |  1.78 | 0.5951 |    2504 B |
+|                Mugen |   8.075 us | 0.1554 us | 0.1790 us |  2.01 | 0.4349 |    2014 B |
+|            MvvmCross |   9.263 us | 0.0583 us | 0.0546 us |  2.32 | 0.9155 |    3873 B |
+|           ReactiveUI |  49.217 us | 0.8883 us | 0.8309 us | 12.34 | 3.5400 |   14953 B |
+|       PraeclarumBind | 300.919 us | 0.6047 us | 0.5657 us | 75.32 | 2.4414 |   10634 B |
 
 <sup>[sources](EBind.Benchmarks/Comparison_Creation.cs)</sup>
 </details>
@@ -335,31 +352,17 @@ AMD Ryzen 5 1600, 1 CPU, 12 logical and 6 physical cores
 <details>
 <summary>Comparison: Creation, Two-Way <sup><a id='benchmark-comparison-creation-two-way' href='#benchmark-comparison-creation-two-way' title='Anchor'>🔗</a></sup></summary>
 
-|         Method |       Mean |     Error |    StdDev |  Ratio | RatioSD |  Gen 0 | Allocated |
-|--------------- |-----------:|----------:|----------:|-------:|--------:|-------:|----------:|
-|          EBind |   4.815 us | 0.0130 us | 0.0121 us |   1.00 |    0.00 | 0.7553 |   3.11 KB |
-|          Mugen |   7.413 us | 0.0904 us | 0.0846 us |   1.54 |    0.02 | 0.4883 |   2.02 KB |
-|      MvvmLight |   8.658 us | 0.0986 us | 0.0874 us |   1.80 |    0.02 | 0.7782 |   3.21 KB |
-|      MvvmCross |  12.754 us | 0.1306 us | 0.1221 us |   2.65 |    0.03 | 1.0529 |   4.34 KB |
-|     ReactiveUI |  79.358 us | 1.0734 us | 1.0041 us |  16.48 |    0.23 | 6.3477 |  26.06 KB |
-| PraeclarumBind | 615.675 us | 3.5524 us | 3.3229 us | 127.86 |    0.81 | 3.9063 |  19.09 KB |
+|               Method |       Mean |     Error |    StdDev |  Ratio |  Gen 0 | Allocated |
+|--------------------- |-----------:|----------:|----------:|-------:|-------:|----------:|
+| XamarinFormsCompiled |   3.058 us | 0.0167 us | 0.0156 us |   0.62 | 0.1831 |     768 B |
+|                EBind |   4.961 us | 0.0309 us | 0.0289 us |   1.00 | 0.7553 |    3184 B |
+|                Mugen |   7.669 us | 0.0444 us | 0.0370 us |   1.55 | 0.4883 |    2064 B |
+|            MvvmLight |   8.812 us | 0.0465 us | 0.0435 us |   1.78 | 0.7782 |    3288 B |
+|            MvvmCross |  13.041 us | 0.0972 us | 0.0909 us |   2.63 | 1.0529 |    4449 B |
+|           ReactiveUI |  80.447 us | 0.4630 us | 0.4331 us |  16.22 | 6.4697 |   27237 B |
+|       PraeclarumBind | 572.390 us | 3.0060 us | 2.8118 us | 115.39 | 3.9063 |   19551 B |
 
 <sup>[sources](EBind.Benchmarks/Comparison_Creation_TwoWay.cs)</sup>
-</details>
-
-<details open>
-<summary>Comparison: Trigger <sup><a id='benchmark-comparison-trigger' href='#benchmark-comparison-trigger' title='Anchor'>🔗</a></sup></summary>
-
-|         Method |          Mean |      Error |     StdDev |    Ratio | RatioSD |  Gen 0 | Allocated |
-|--------------- |--------------:|-----------:|-----------:|---------:|--------:|-------:|----------:|
-|          EBind |      70.48 ns |   0.631 ns |   0.591 ns |     1.00 |    0.00 | 0.0305 |     128 B |
-|          Mugen |     189.46 ns |   1.709 ns |   1.334 ns |     2.69 |    0.02 | 0.0172 |      72 B |
-|      MvvmLight |   1,028.04 ns |  13.442 ns |  12.574 ns |    14.59 |    0.19 | 0.1259 |     528 B |
-|      MvvmCross |   1,313.41 ns |  10.489 ns |   9.811 ns |    18.64 |    0.16 | 0.1678 |     704 B |
-|     ReactiveUI |   2,810.14 ns |  26.981 ns |  25.238 ns |    39.88 |    0.53 | 0.1678 |     713 B |
-| PraeclarumBind | 162,013.06 ns | 918.216 ns | 813.974 ns | 2,299.76 |   23.26 | 0.9766 |    4415 B |
-
-<sup>[sources](EBind.Benchmarks/Comparison_Trigger.cs)</sup>
 </details>
 
 <details>
@@ -367,20 +370,22 @@ AMD Ryzen 5 1600, 1 CPU, 12 logical and 6 physical cores
 
 `IterationCount=1  LaunchCount=100  RunStrategy=ColdStart`
 
-|     Type |         Method |         Mean |       Error |      StdDev | Ratio | RatioSD | Allocated |
-|--------- |--------------- |-------------:|------------:|------------:|------:|--------:|----------:|
-| Creation |          EBind |  13,184.0 us |   479.24 us | 1,413.05 us |  1.00 |    0.00 |    3504 B |
-| Creation |      MvvmLight |  13,990.8 us |    79.85 us |   235.45 us |  1.07 |    0.06 |    3216 B |
-| Creation |      MvvmCross |  18,360.7 us |    71.51 us |   210.85 us |  1.40 |    0.08 |    6144 B |
-| Creation | PraeclarumBind |  20,246.7 us |   108.30 us |   319.33 us |  1.54 |    0.09 |   12312 B |
-| Creation |          Mugen |  70,996.2 us |   231.94 us |   683.88 us |  5.42 |    0.30 |    7472 B |
-| Creation |     ReactiveUI | 136,189.6 us | 2,543.53 us | 7,499.65 us | 10.36 |    0.32 |   15976 B |
-|  Trigger |          EBind |     671.4 us |     7.92 us |    23.34 us |  0.05 |    0.00 |     224 B |
-|  Trigger |      MvvmCross |   1,090.3 us |    13.85 us |    40.83 us |  0.08 |    0.01 |     704 B |
-|  Trigger |      MvvmLight |   1,956.3 us |    37.87 us |   111.66 us |  0.15 |    0.01 |     608 B |
-|  Trigger |     ReactiveUI |   3,238.9 us |    23.93 us |    70.55 us |  0.25 |    0.01 |     728 B |
-|  Trigger | PraeclarumBind |   3,974.3 us |    49.39 us |   145.61 us |  0.30 |    0.02 |    5000 B |
-|  Trigger |          Mugen |   4,130.2 us |    44.99 us |   132.65 us |  0.32 |    0.02 |     152 B |
+|     Type |               Method |         Mean |     Error |      StdDev | Ratio | Allocated |
+|--------- |--------------------- |-------------:|----------:|------------:|------:|----------:|
+| Creation |                EBind |  13,948.6 us | 411.78 us | 1,214.14 us |  1.00 |    3504 B |
+| Creation |            MvvmLight |  14,719.1 us | 365.87 us | 1,078.77 us |  1.06 |    3216 B |
+| Creation | XamarinFormsCompiled |  18,116.8 us |  93.64 us |   276.11 us |  1.30 |     848 B |
+| Creation |            MvvmCross |  19,323.5 us |  46.63 us |   137.50 us |  1.39 |    6144 B |
+| Creation |       PraeclarumBind |  21,130.5 us |  70.75 us |   208.60 us |  1.52 |   12312 B |
+| Creation |                Mugen |  74,633.6 us | 117.36 us |   346.03 us |  5.37 |    7472 B |
+| Creation |           ReactiveUI | 151,959.5 us | 181.95 us |   536.48 us | 10.94 |   16304 B |
+|  Trigger |                EBind |     705.5 us |   3.10 us |     9.15 us |  0.05 |     224 B |
+|  Trigger |            MvvmCross |   1,144.8 us |   9.13 us |    26.91 us |  0.08 |     704 B |
+|  Trigger | XamarinFormsCompiled |   1,307.2 us |   6.60 us |    19.46 us |  0.09 |     152 B |
+|  Trigger |            MvvmLight |   2,010.1 us |  13.96 us |    41.15 us |  0.14 |     608 B |
+|  Trigger |           ReactiveUI |   3,354.7 us |   9.44 us |    27.84 us |  0.24 |     792 B |
+|  Trigger |       PraeclarumBind |   4,118.7 us |  15.92 us |    46.93 us |  0.30 |    5000 B |
+|  Trigger |                Mugen |   4,326.1 us |  18.50 us |    54.54 us |  0.31 |     152 B |
 </details>
 
 <details>
