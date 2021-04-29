@@ -9,7 +9,9 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>.NET Data Binding we deserve: concise, fast, feature-rich</Description>
     <PackageTags>mvvm, data, binding, xamarin, maui, wpf, uwp, winforms</PackageTags>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
+    <PackageReleaseNotes>* updated AgileObjects.ReadableExpressions to version 2.6.0 with .NET Standard 2.0 support
+  The library is resolved via Unity NuGet package managers without any conflicts now.</PackageReleaseNotes>
     <PackageIcon>icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/SIDOVSKY/EBind</PackageProjectUrl>
     <RepositoryUrl>https://github.com/SIDOVSKY/EBind.git</RepositoryUrl>
