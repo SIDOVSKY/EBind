@@ -173,7 +173,7 @@ namespace EBind.Platform
                 {
                     if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
                     {
-                        o.DateChanged += h;
+                        o.DateChanged -= h;
                     }
                     else
                     {
